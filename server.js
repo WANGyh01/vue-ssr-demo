@@ -35,22 +35,41 @@ if (isProd) { // 生产模式
 }
 
 // 声明render函数
-const render = (req, res) => {
-  renderer.renderToString({
-    // 在模板当中使用外部数据
-    title: '你好 Vue ssr',
-    meta: `<meta name="description" content="你好 Vue ssr">`
-  }, (err, html) => {
-    if (err) {
-      return res.status(500).end('Internal Server Error')
-    }
+const render = async (req, res) => {
+  // renderer.renderToString({
+  //   // 在模板当中使用外部数据，这个参数就是entry-server.js中的context对象
+  //   title: '你好 Vue ssr',
+  //   meta: `<meta name="description" content="你好 Vue ssr">`,
+  //   url: req.url
+  // }, (err, html) => {
+  //   if (err) {
+  //     return res.status(500).end('Internal Server Error')
+  //   }
+  //   // 为了解决输出乱码问题，要设置响应标头+设置meta标签
+  //   res.setHeader('Content-Type', 'text/html; charset=utf8')
+  //   res.end(html)
+  // })
+
+  // async/await 改写
+  try {
+    const html = await renderer.renderToString({
+      // 在模板当中使用外部数据，这个参数就是entry-server.js中的context对象
+      title: '你好 Vue ssr',
+      meta: `<meta name="description" content="你好 Vue ssr">`,
+      url: req.url
+    })
+
     // 为了解决输出乱码问题，要设置响应标头+设置meta标签
     res.setHeader('Content-Type', 'text/html; charset=utf8')
     res.end(html)
-  })
-}
 
-server.get('/', isProd
+  } catch (err){
+    res.status(500).end('Internal Server Error...')
+  }
+
+}
+// 服务端路由设置为 *，意味着所有的路由都会进入这里
+server.get('*', isProd
   ? render
   : async (req, res) => {
     // 等待有了renderer渲染器之后，调用render渲染
