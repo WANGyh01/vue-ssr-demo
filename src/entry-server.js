@@ -7,9 +7,13 @@ export default async context => {
   // 就已经准备就绪。
 
   const { app, router } = createApp()
+  const meta = app.$meta() // 拿到meta信息
 
   // 设置服务器端 router 的位置
   router.push(context.url)
+
+  // 拿到对应页面的meta信息，可以合并到一块
+  context.meta = meta
 
   // 等到 router 将可能的异步组件和钩子函数解析完
   await new Promise(router.onReady.bind(router))
