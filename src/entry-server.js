@@ -6,7 +6,7 @@ export default async context => {
   // 以便服务器能够等待所有的内容在渲染前，
   // 就已经准备就绪。
 
-  const { app, router } = createApp()
+  const { app, router, store } = createApp()
   const meta = app.$meta() // 拿到meta信息
 
   // 设置服务器端 router 的位置
@@ -17,6 +17,13 @@ export default async context => {
 
   // 等到 router 将可能的异步组件和钩子函数解析完
   await new Promise(router.onReady.bind(router))
+
+  context.rendered = () => {
+    // Renderer 会把 context.state 数据对象内联到页面模板中
+    // 最终发送给客户端的页面中会包含一段脚本：window.__INITIAL_STATE__ = context.state
+    // 客户端就要把页面中的 window.__INITIAL_STATE__ 拿出来填充到客户端 store 容器中
+    context.state = store.state
+  }
 
   // 返回vue实例，和客户端的处理是一样的，都是要等待router解析完路由配置之后
   return app
